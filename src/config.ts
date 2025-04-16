@@ -4,7 +4,7 @@ configDotenv();
 
 export const PORT = process.env.PORT || 3000;
 
-const RPC_URL =
+export const RPC_URL =
   process.env.RPC_URL || "https://api.mainnet-beta.solana.com";
 const WSS_URL =
   process.env.WSS_URL || "ws://api.mainnet-beta.solana.com";

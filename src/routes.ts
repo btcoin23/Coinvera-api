@@ -2,6 +2,7 @@ import express from 'express';
 import { getPumpTokenPriceInSol } from './pumpfun';
 import { getCachedSolPrice } from './service';
 import { getRayTokenPriceInSol } from './raydium';
+import { getMoonshotTokenPriceInSol } from './moonshot';
 export const router = express.Router();
 // import authenticateKey from './middleware/auth';
 // import createRateLimiter from './middleware/rateLimiter';
@@ -19,6 +20,7 @@ router.get('/price', async (req, res) => {
   const priceInSOL = await Promise.any([
     getPumpTokenPriceInSol(ca),
     getRayTokenPriceInSol(ca),
+    getMoonshotTokenPriceInSol(ca),
   ])
   // const priceInSOL = await getPumpTokenPriceInSol(ca);
   // const priceInSOL = await getRayTokenPriceInSol(ca);
