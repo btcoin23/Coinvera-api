@@ -60,7 +60,7 @@
 ## Response example
 - The response of token `2aziTNXVUtca823nCUx9AMAci5pB4YWYhkC13pwrpump` price
     ``` bash
-        {
+    {
         "dex": "PumpFun",
         "priceInSol": 2.7958993493010253e-8,
         "priceInUsd": 0.0000037468891867774903
