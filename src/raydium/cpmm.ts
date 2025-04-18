@@ -74,7 +74,7 @@ export async function getRayCpmmPriceInSol(ca: string) {
     const priceInSol = isBaseToken
       ? price
       : 1 / price;
-    return priceInSol;
+    return { priceInSol, dex: "Raydium Cpmm" };
   } catch (error) {
     console.error("Error fetching ray cpmm pool info:", error);
     throw error;

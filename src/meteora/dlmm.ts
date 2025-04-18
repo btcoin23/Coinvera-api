@@ -4,7 +4,7 @@ import DLMM, { IDL, LBCLMM_PROGRAM_IDS } from "@meteora-ag/dlmm";
 import { AnchorProvider, Program } from "@project-serum/anchor";
 import { connection } from "../config";
 
-export const getMeteoraDlmmTokenPriceInSOL = async (ca: string): Promise<number> => {
+export const getMeteoraDlmmTokenPriceInSOL = async (ca: string) => {
   try {
     const mint = new PublicKey(ca);
     const lbPair = await getMeteoraDlmmPool(mint);
@@ -13,7 +13,7 @@ export const getMeteoraDlmmTokenPriceInSOL = async (ca: string): Promise<number>
     
     const priceInSol = Number(activeBin.pricePerToken);
 
-    return priceInSol;
+    return { priceInSol, dex: "Meteora DLMM" };
   } catch (error) {
     console.error("Error fetching Meteora DLMM token price:", error);
     throw error

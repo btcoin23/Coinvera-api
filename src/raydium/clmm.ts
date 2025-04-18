@@ -66,7 +66,7 @@ import {
         poolState.mintDecimalsB  
       ).toNumber()
       const priceInSol = poolState.mintA.toBase58() === ca? price: 1 / price;
-      return priceInSol;
+      return { priceInSol, dex: "Raydium Clmm" };
     } catch (error) {
       console.error("Error fetching ray clmm pool info:", error);
       throw error;

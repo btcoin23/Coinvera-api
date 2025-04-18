@@ -1,7 +1,7 @@
 import { Moonshot, Environment } from "@wen-moon-ser/moonshot-sdk";
 import { RPC_URL } from "../config";
 
-export async function getMoonshotTokenPriceInSol(ca: string): Promise<number> {
+export async function getMoonshotTokenPriceInSol(ca: string) {
   const moonshot = new Moonshot({
     rpcUrl: RPC_URL,
     authToken: "YOUR_AUTH_TOKEN",
@@ -17,5 +17,5 @@ export async function getMoonshotTokenPriceInSol(ca: string): Promise<number> {
     curvePosition: curvePos,
   });
   const priceInSol = Number(collateralPrice) / 1e9; // Convert lamports to SOL
-  return priceInSol;
+  return { priceInSol, dex: "Moonshot" };
 }

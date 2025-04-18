@@ -4,7 +4,7 @@ import { PUMP_FUN_PROGRAM, PUMP_TOKEN_DECIMALS } from "./constants";
 import { readBigUintLE } from "./utils";
 import { connection } from "../config";
 
-export async function getPumpTokenPriceInSol(ca: string): Promise<number> {
+export async function getPumpTokenPriceInSol(ca: string) {
     const mint = new PublicKey(ca);
     const mint_account = mint.toBuffer();
     const [bondingCurve] = PublicKey.findProgramAddressSync(
@@ -59,7 +59,7 @@ export async function getPumpTokenPriceInSol(ca: string): Promise<number> {
     const leftTokens = realTokenReserves - 206900000;
     const initialRealTokenReserves = totalSupply - 206900000;
     const progress = 100 - (leftTokens * 100) / initialRealTokenReserves;
-    const priceInSOL =
+    const priceInSol =
       virtualSolReserves /
       LAMPORTS_PER_SOL /
       (virtualTokenReserves / 10 ** PUMP_TOKEN_DECIMALS);
@@ -69,5 +69,5 @@ export async function getPumpTokenPriceInSol(ca: string): Promise<number> {
     //   return null;
     }
     
-    return priceInSOL;
+    return { priceInSol, dex: "PumpFun" };
   }

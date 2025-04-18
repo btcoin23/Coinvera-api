@@ -18,7 +18,7 @@ export const router = express.Router();
 router.get('/price', async (req, res) => {
   const ca = req.query.ca as string;
   const now_t = Date.now();
-  const priceInSOL = await Promise.any([
+  const result = await Promise.any([
     getPumpTokenPriceInSol(ca),
     getRayAmmPriceInSol(ca),
     getRayClmmPriceInSol(ca),
@@ -27,7 +27,7 @@ router.get('/price', async (req, res) => {
     getMeteoraAmmTokenPriceInSol(ca),
     getMeteoraDlmmTokenPriceInSOL(ca),
   ])
-  const priceInUSD = priceInSOL * getCachedSolPrice();
-  res.status(200).json({ priceInSOL, priceInUSD });
-  console.log("- Request:", ca, priceInSOL, priceInUSD, (Date.now() - now_t) + "ms");
+  const priceInUSD = result.priceInSol * getCachedSolPrice();
+  res.status(200).json({ priceInSOL: result.priceInSol, priceInUSD });
+  console.log("- Request:", ca, result.dex, result.priceInSol, priceInUSD, (Date.now() - now_t) + "ms");
 });

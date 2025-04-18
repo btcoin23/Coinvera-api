@@ -10,7 +10,7 @@ import { BN } from "bn.js";
 
 export const getMeteoraAmmTokenPriceInSol = async (
   ca: string
-): Promise<number> => {
+) => {
   try {
     const mint = new PublicKey(ca);
     const pool = await getMeteoraAmmPool(mint);
@@ -23,7 +23,7 @@ export const getMeteoraAmmTokenPriceInSol = async (
     // const wsol_amount = isBaseToken? tokenB_amount : tokenA_amount;
     const price = stabelPool.poolInfo.tokenBAmount.div(stabelPool.poolInfo.tokenAAmount).mul(new BN(10).pow(new BN(stabelPool.vaultA.tokenMint.decimals).sub(new BN(stabelPool.vaultB.tokenMint.decimals)).add(new BN(9)))).toNumber() / 10 ** 9
     const priceInSol = isBaseToken? price: 1 / price;
-    return priceInSol;
+    return { priceInSol, dex: "Meteora AMM" };
   } catch (error) {
     console.error("Error fetching Meteora AMM token price:", error);
     throw error

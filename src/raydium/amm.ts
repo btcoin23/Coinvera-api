@@ -73,7 +73,7 @@ import {
       const priceInSol = isBaseToken
         ? price
         : 1 / price;
-      return priceInSol;
+      return { priceInSol, dex: "Raydium Amm" };
     } catch (error) {
       console.error("Error fetching ray amm pool info:", error);
       throw error;
