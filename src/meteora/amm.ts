@@ -5,28 +5,52 @@ import AmmImpl, {
 import { PublicKey } from "@solana/web3.js";
 import * as spl from "@solana/spl-token";
 import { AnchorProvider, Program } from "@project-serum/anchor";
-import { connection } from "../config";
+import { CLEAR_CACHE_INTERVAL, connection } from "../config";
 import { BN } from "bn.js";
 
-export const getMeteoraAmmTokenPriceInSol = async (
-  ca: string
-) => {
+const cachePoolInfo = new Map<string, PublicKey>();
+setInterval(() => {
+    cachePoolInfo.clear();
+}, CLEAR_CACHE_INTERVAL);
+
+export const getMeteoraAmmTokenPriceInSol = async (ca: string) => {
   try {
     const mint = new PublicKey(ca);
-    const pool = await getMeteoraAmmPool(mint);
-    const stabelPool = await AmmImpl.create(connection, pool.publicKey);
+
+    //  Get pool ID
+    let poolAccount = cachePoolInfo.get(ca);
+    if (poolAccount === undefined) {
+      poolAccount = await getMeteoraAmmPool(mint);
+      cachePoolInfo.set(ca, poolAccount);
+    }
+
+    // Create Amm object
+    const stabelPool = await AmmImpl.create(connection, poolAccount);
     if (!stabelPool) throw new Error("Invalid pool");
     const isBaseToken = stabelPool.vaultA.tokenMint.address.equals(mint);
     // const tokenA_amount = stabelPool.poolInfo.tokenAAmount.toNumber() / 10 ** stabelPool.vaultA.tokenMint.decimals;
     // const tokenB_amount = stabelPool.poolInfo.tokenBAmount.toNumber() / 10 ** stabelPool.vaultB.tokenMint.decimals;
     // const token_amount = isBaseToken? tokenA_amount : tokenB_amount;
     // const wsol_amount = isBaseToken? tokenB_amount : tokenA_amount;
-    const price = stabelPool.poolInfo.tokenBAmount.div(stabelPool.poolInfo.tokenAAmount).mul(new BN(10).pow(new BN(stabelPool.vaultA.tokenMint.decimals).sub(new BN(stabelPool.vaultB.tokenMint.decimals)).add(new BN(9)))).toNumber() / 10 ** 9
-    const priceInSol = isBaseToken? price: 1 / price;
+    const price =
+      stabelPool.poolInfo.tokenBAmount
+        .mul(
+            new BN(10).pow(
+            new BN(stabelPool.vaultA.tokenMint.decimals)
+                .sub(new BN(stabelPool.vaultB.tokenMint.decimals))
+                .add(new BN(9))
+            )
+        )
+        .div(stabelPool.poolInfo.tokenAAmount)
+        .toNumber() /
+      10 ** 9;
+    const priceInSol = isBaseToken ? price : 1 / price;
+    // console.log("Meteora Amm", Date.now);
     return { priceInSol, dex: "Meteora AMM" };
   } catch (error) {
     console.error("Error fetching Meteora AMM token price:", error);
-    throw error
+    throw error;
+    // return null
   }
 };
 
@@ -94,7 +118,8 @@ const getMeteoraAmmPool = async (mint: PublicKey) => {
 
     return maxIdx;
   }, 0);
-  console.log("- Meteora AMM:", ammPools[maxIndex].publicKey.toBase58());
+//   console.log("- Meteora AMM:", ammPools[maxIndex].publicKey.toBase58());
+  const poolId = ammPools[maxIndex].publicKey;
 
-  return ammPools[maxIndex];
+  return poolId;
 };

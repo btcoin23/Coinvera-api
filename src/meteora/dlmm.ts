@@ -2,21 +2,35 @@ import { PublicKey } from "@solana/web3.js";
 import * as spl from "@solana/spl-token";
 import DLMM, { IDL, LBCLMM_PROGRAM_IDS } from "@meteora-ag/dlmm";
 import { AnchorProvider, Program } from "@project-serum/anchor";
-import { connection } from "../config";
+import { CLEAR_CACHE_INTERVAL, connection } from "../config";
+
+const cachePoolInfo = new Map<string, PublicKey>();
+setInterval(() => {
+    cachePoolInfo.clear();
+}, CLEAR_CACHE_INTERVAL);
 
 export const getMeteoraDlmmTokenPriceInSOL = async (ca: string) => {
   try {
     const mint = new PublicKey(ca);
-    const lbPair = await getMeteoraDlmmPool(mint);
-    const dlmmPool = await DLMM.create(connection, lbPair.publicKey);
+
+    //  Get pool ID
+    let poolAccount = cachePoolInfo.get(ca);
+    if (poolAccount === undefined) {
+      poolAccount = await getMeteoraDlmmPool(mint);
+      cachePoolInfo.set(ca, poolAccount);
+    }
+
+    // Create DLMM object
+    const dlmmPool = await DLMM.create(connection, poolAccount);
     const activeBin = await dlmmPool.getActiveBin();
-    
     const priceInSol = Number(activeBin.pricePerToken);
+    // console.log("Meteora Dlmm", Date.now());
 
     return { priceInSol, dex: "Meteora DLMM" };
   } catch (error) {
     console.error("Error fetching Meteora DLMM token price:", error);
     throw error
+    // return null
   }
 };
 
@@ -90,7 +104,7 @@ const getMeteoraDlmmPool = async (mint: PublicKey) => {
 
     return maxIdx;
   }, 0);
-  console.log("- Meteora DLMM:", lbPairs[maxIndex].publicKey.toBase58());
+//   console.log("- Meteora DLMM:", lbPairs[maxIndex].publicKey.toBase58());
 
-  return lbPairs[maxIndex];
+  return lbPairs[maxIndex].publicKey;
 };

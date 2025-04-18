@@ -16,18 +16,27 @@ export const router = express.Router();
 // });
 
 router.get('/price', async (req, res) => {
-  const ca = req.query.ca as string;
   const now_t = Date.now();
-  const result = await Promise.any([
-    getPumpTokenPriceInSol(ca),
-    getRayAmmPriceInSol(ca),
-    getRayClmmPriceInSol(ca),
-    getRayCpmmPriceInSol(ca),
-    getMoonshotTokenPriceInSol(ca),
-    getMeteoraAmmTokenPriceInSol(ca),
-    getMeteoraDlmmTokenPriceInSOL(ca),
-  ])
-  const priceInUSD = result.priceInSol * getCachedSolPrice();
-  res.status(200).json({ priceInSOL: result.priceInSol, priceInUSD });
-  console.log("- Request:", ca, result.dex, result.priceInSol, priceInUSD, (Date.now() - now_t) + "ms");
+  try{
+    const ca = req.query.ca as string;
+    const result = await Promise.any([
+      getPumpTokenPriceInSol(ca),
+      getRayAmmPriceInSol(ca),
+      getRayClmmPriceInSol(ca),
+      getRayCpmmPriceInSol(ca),
+      getMoonshotTokenPriceInSol(ca),
+      getMeteoraAmmTokenPriceInSol(ca),
+      getMeteoraDlmmTokenPriceInSOL(ca),
+    ])
+    // if(result[0] === null) throw new Error("No price");
+    const priceInUSD = result.priceInSol * getCachedSolPrice();
+    console.log("- Request:", ca, result.dex, result.priceInSol, priceInUSD, (Date.now() - now_t) + "ms");
+    res.status(200).json({ priceInSOL: result.priceInSol, priceInUSD });
+    res.status(200).json({ priceInSOL: result });
+  }catch(error){
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+  
+  console.log("- Request:", (Date.now() - now_t) + "ms");
 });

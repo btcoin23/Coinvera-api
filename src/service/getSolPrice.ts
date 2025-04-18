@@ -9,7 +9,7 @@ export default async function getSolPrice(){
       const price = data.data[WSOL]?.price;
       return price;
     } catch (error) {
-      console.log("Error fetching SOL price: " + error);
+      console.error("Error fetching SOL price: " + error);
       return 0;
     }
   };
