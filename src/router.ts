@@ -1,19 +1,12 @@
 import express from 'express';
 import { getPumpTokenPriceInSol } from './pumpfun';
-import { getCachedSolPrice } from './service';
-import { getRayAmmPriceInSol, getRayClmmPriceInSol, getRayCpmmPriceInSol } from './raydium';
 import { getMoonshotTokenPriceInSol } from './moonshot';
+import { getRayAmmPriceInSol, getRayClmmPriceInSol, getRayCpmmPriceInSol } from './raydium';
 import { getMeteoraAmmTokenPriceInSol, getMeteoraDlmmTokenPriceInSOL } from './meteora';
+import { authenticateKey } from './middleware/auth';
 export const router = express.Router();
-// import authenticateKey from './middleware/auth';
-// import createRateLimiter from './middleware/rateLimiter';
 
-// router.use(authenticateKey);
-
-// router.use((req, res, next) => {
-// //   const rateLimiter = createRateLimiter(req.user);
-// //   rateLimiter(req, res, next);
-// });
+router.use(authenticateKey);
 
 router.get('/price', async (req, res) => {
   const now_t = Date.now();
