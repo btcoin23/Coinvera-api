@@ -8,7 +8,10 @@
 - Rate-limit check
 
 ## How to run
-- Clone this repo
+- Clone this repo 
+    ``` bash
+    git clone https://github.com/btcoin23/Spl-api-backend.git
+    ```
 - Run `npm install`
 - Create `.env` file and set `RPC_URL`, `PORT` and `MONGODB_URI`
     ``` bash
