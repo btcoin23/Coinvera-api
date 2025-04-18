@@ -15,7 +15,8 @@ export const getMeteoraDlmmTokenPriceInSOL = async (ca: string): Promise<number>
 
     return priceInSol;
   } catch (error) {
-    throw new Error("Failed to get Meteora DLMM quote");
+    console.error("Error fetching Meteora DLMM token price:", error);
+    throw error
   }
 };
 

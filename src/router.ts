@@ -1,10 +1,9 @@
 import express from 'express';
 import { getPumpTokenPriceInSol } from './pumpfun';
 import { getCachedSolPrice } from './service';
-import { getRayTokenPriceInSol } from './raydium';
+import { getRayAmmPriceInSol, getRayClmmPriceInSol, getRayCpmmPriceInSol } from './raydium';
 import { getMoonshotTokenPriceInSol } from './moonshot';
-import { getMeteoraAmmTokenPriceInSol } from './meteora/amm';
-import { getMeteoraDlmmTokenPriceInSOL } from './meteora/dlmm';
+import { getMeteoraAmmTokenPriceInSol, getMeteoraDlmmTokenPriceInSOL } from './meteora';
 export const router = express.Router();
 // import authenticateKey from './middleware/auth';
 // import createRateLimiter from './middleware/rateLimiter';
@@ -21,7 +20,9 @@ router.get('/price', async (req, res) => {
   const now_t = Date.now();
   const priceInSOL = await Promise.any([
     getPumpTokenPriceInSol(ca),
-    getRayTokenPriceInSol(ca),
+    getRayAmmPriceInSol(ca),
+    getRayClmmPriceInSol(ca),
+    getRayCpmmPriceInSol(ca),
     getMoonshotTokenPriceInSol(ca),
     getMeteoraAmmTokenPriceInSol(ca),
     getMeteoraDlmmTokenPriceInSOL(ca),
@@ -30,5 +31,3 @@ router.get('/price', async (req, res) => {
   res.status(200).json({ priceInSOL, priceInUSD });
   console.log("- Request:", ca, priceInSOL, priceInUSD, (Date.now() - now_t) + "ms");
 });
-
-// module.exports = router;

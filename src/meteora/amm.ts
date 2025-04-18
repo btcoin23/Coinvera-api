@@ -6,6 +6,7 @@ import { PublicKey } from "@solana/web3.js";
 import * as spl from "@solana/spl-token";
 import { AnchorProvider, Program } from "@project-serum/anchor";
 import { connection } from "../config";
+import { BN } from "bn.js";
 
 export const getMeteoraAmmTokenPriceInSol = async (
   ca: string
@@ -16,14 +17,16 @@ export const getMeteoraAmmTokenPriceInSol = async (
     const stabelPool = await AmmImpl.create(connection, pool.publicKey);
     if (!stabelPool) throw new Error("Invalid pool");
     const isBaseToken = stabelPool.vaultA.tokenMint.address.equals(mint);
-    const tokenA_amount = stabelPool.poolInfo.tokenAAmount.toNumber() / 10 ** stabelPool.vaultA.tokenMint.decimals;
-    const tokenB_amount = stabelPool.poolInfo.tokenBAmount.toNumber() / 10 ** stabelPool.vaultB.tokenMint.decimals;
-    const token_amount = isBaseToken? tokenA_amount : tokenB_amount;
-    const wsol_amount = isBaseToken? tokenB_amount : tokenA_amount;
-    const priceInSol = wsol_amount / token_amount;
+    // const tokenA_amount = stabelPool.poolInfo.tokenAAmount.toNumber() / 10 ** stabelPool.vaultA.tokenMint.decimals;
+    // const tokenB_amount = stabelPool.poolInfo.tokenBAmount.toNumber() / 10 ** stabelPool.vaultB.tokenMint.decimals;
+    // const token_amount = isBaseToken? tokenA_amount : tokenB_amount;
+    // const wsol_amount = isBaseToken? tokenB_amount : tokenA_amount;
+    const price = stabelPool.poolInfo.tokenBAmount.div(stabelPool.poolInfo.tokenAAmount).mul(new BN(10).pow(new BN(stabelPool.vaultA.tokenMint.decimals).sub(new BN(stabelPool.vaultB.tokenMint.decimals)).add(new BN(9)))).toNumber() / 10 ** 9
+    const priceInSol = isBaseToken? price: 1 / price;
     return priceInSol;
   } catch (error) {
-    throw new Error("Failed to get Meteora Amm Token Price");
+    console.error("Error fetching Meteora AMM token price:", error);
+    throw error
   }
 };
 
