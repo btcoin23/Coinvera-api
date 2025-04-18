@@ -28,15 +28,10 @@ router.get('/price', async (req, res) => {
       getMeteoraAmmTokenPriceInSol(ca),
       getMeteoraDlmmTokenPriceInSOL(ca),
     ])
-    // if(result[0] === null) throw new Error("No price");
-    const priceInUSD = result.priceInSol * getCachedSolPrice();
-    console.log("- Request:", ca, result.dex, result.priceInSol, priceInUSD, (Date.now() - now_t) + "ms");
-    res.status(200).json({ priceInSOL: result.priceInSol, priceInUSD });
-    res.status(200).json({ priceInSOL: result });
+    console.log("\n-[GET] Request:", ca, result, (Date.now() - now_t) + "ms");
+    res.status(200).json(result);
   }catch(error){
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-  
-  console.log("- Request:", (Date.now() - now_t) + "ms");
 });

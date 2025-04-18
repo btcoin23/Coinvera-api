@@ -1,5 +1,6 @@
 import { Moonshot, Environment } from "@wen-moon-ser/moonshot-sdk";
 import { RPC_URL } from "../config";
+import { getCachedSolPrice } from "../service";
 
 export async function getMoonshotTokenPriceInSol(ca: string) {
   try{
@@ -18,11 +19,12 @@ export async function getMoonshotTokenPriceInSol(ca: string) {
         curvePosition: curvePos,
       });
       const priceInSol = Number(collateralPrice) / 1e9; // Convert lamports to SOL
-      console.log("Moonshot", Date.now());
+      const priceInUsd = priceInSol * getCachedSolPrice();
+    //   console.log("Moonshot", Date.now());
 
-      return { priceInSol, dex: "Moonshot" };
+      return { dex: "Moonshot", liquidity: undefined, priceInSol, priceInUsd  };
   }catch(error){
-    console.error(error);
+    console.error("Error fetching moonshot token info", error);
     throw error;
     // return null;
   }

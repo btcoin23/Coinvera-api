@@ -5,6 +5,7 @@ import {
     WSOLMint,
   } from "@raydium-io/raydium-sdk-v2";
   import { connection } from "../config";
+import { getCachedSolPrice } from "../service";
   
   // Function to fetch pool info using a mint address
   export async function getRayClmmPriceInSol(ca: string) {
@@ -59,16 +60,19 @@ import {
       // Use the first account found where mint is baseMint
       const poolAccount = accounts[0];
       const poolState = POOL_LAYOUT.decode(poolAccount.account.data);
-
+      
+      const liquidity = poolState.liquidity.toNumber() * getCachedSolPrice();
+      if(liquidity === 0) throw new Error("No liquidity");
       const price = SqrtPriceMath.sqrtPriceX64ToPrice(
         poolState.sqrtPriceX64,
         poolState.mintDecimalsA,
         poolState.mintDecimalsB  
       ).toNumber()
       const priceInSol = poolState.mintA.toBase58() === ca? price: 1 / price;
+      const priceInUsd = priceInSol * getCachedSolPrice();
     //   console.log("Raydium Clmm", Date.now());
 
-      return { priceInSol, dex: "Raydium Clmm" };
+      return { dex: "Raydium Clmm", poolId: poolAccount.pubkey.toBase58(), liquidity, priceInSol, priceInUsd };
     } catch (error) {
       console.error("Error fetching ray clmm pool info:", error);
       throw error;

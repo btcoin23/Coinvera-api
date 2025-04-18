@@ -6,8 +6,10 @@ import {
 import { CLEAR_CACHE_INTERVAL, connection } from "../config";
 import { BN } from "bn.js";
 import { PublicKey } from "@solana/web3.js";
+import { calculatePrice, getCachedSolPrice } from "../service";
 
 type PoolInfo = {
+  poolId: PublicKey;
   mintA: PublicKey;
   mintB: PublicKey;
   vaultA: PublicKey;
@@ -33,33 +35,31 @@ export async function getRayCpmmPriceInSol(ca: string) {
       poolInfo = await getRayCpmmPool(ca);
       cachePoolInfo.set(ca, poolInfo);
     }
+
     const [baseData, quoteData] = await Promise.all([
       connection.getTokenAccountBalance(poolInfo.vaultA),
       connection.getTokenAccountBalance(poolInfo.vaultB),
     ]);
+
     // const baseReserve =
     //   new BN(baseData.value.amount).div(new BN(10).pow(new BN(poolState.mintDecimalA))).toNumber();
     // const quoteReserve =
     //   new BN(quoteData.value.amount).div(new BN(10).pow(new BN(poolState.mintDecimalB))).toNumber();
-
-    const price =
-      new BN(quoteData.value.amount)
-        .mul(
-            new BN(10).pow(
-            new BN(baseData.value.decimals)
-                .sub(new BN(quoteData.value.decimals))
-                .add(new BN(9))
-            )
-        )
-        .div(new BN(baseData.value.amount))
-        .toNumber() /
-      10 ** 9;
-
     const isBaseToken = ca === poolInfo.mintA.toBase58();
-    const priceInSol = isBaseToken ? price : 1 / price;
+    const priceInSol = isBaseToken
+    ? calculatePrice(quoteData.value.amount, baseData.value.amount, 
+        baseData.value.decimals - quoteData.value.decimals)
+    : calculatePrice(baseData.value.amount, quoteData.value.amount, 
+        quoteData.value.decimals - baseData.value.decimals);
+
+    let wsol_amount = isBaseToken? new BN(quoteData.value.amount): new BN(baseData.value.amount);
+    const liquidity = 2 * wsol_amount.toNumber() / 10 ** 9 * getCachedSolPrice();
+    if(liquidity === 0) throw new Error("No liquidity");
+    // const priceInSol = isBaseToken ? price : 1 / price;
+    const priceInUsd = priceInSol * getCachedSolPrice();
     // console.log("Raydium Cpmm", Date.now());
 
-    return { priceInSol, dex: "Raydium Cpmm" };
+    return { dex: "Raydium Cpmm", poolId: poolInfo.poolId.toBase58(), liquidity, priceInSol, priceInUsd };
   } catch (error) {
     console.error("Error fetching ray cpmm pool info:", error);
     throw error;
@@ -112,6 +112,7 @@ const getRayCpmmPool = async (ca: string) => {
   const poolState = POOL_LAYOUT.decode(poolAccount.account.data);
 
   const poolInfo: PoolInfo = {
+    poolId: poolAccount.pubkey,
     mintA: poolState.mintA,
     mintB: poolState.mintB,
     vaultA: poolState.vaultA,

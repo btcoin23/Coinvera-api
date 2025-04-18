@@ -3,6 +3,8 @@ import * as spl from "@solana/spl-token";
 import DLMM, { IDL, LBCLMM_PROGRAM_IDS } from "@meteora-ag/dlmm";
 import { AnchorProvider, Program } from "@project-serum/anchor";
 import { CLEAR_CACHE_INTERVAL, connection } from "../config";
+import { getCachedSolPrice } from "../service";
+import { BN } from "bn.js";
 
 const cachePoolInfo = new Map<string, PublicKey>();
 setInterval(() => {
@@ -23,10 +25,16 @@ export const getMeteoraDlmmTokenPriceInSOL = async (ca: string) => {
     // Create DLMM object
     const dlmmPool = await DLMM.create(connection, poolAccount);
     const activeBin = await dlmmPool.getActiveBin();
-    const priceInSol = Number(activeBin.pricePerToken);
+    const isBaseToken = dlmmPool.tokenX.mint.address.equals(mint);
+    const wsol_amount = isBaseToken? activeBin.yAmount.toNumber() : activeBin.xAmount.toNumber();
+    const liquidity = 2 * wsol_amount / 10 ** 9 * getCachedSolPrice();
+    if(liquidity === 0) throw new Error("No liquidity");
+    const price = Number(activeBin.pricePerToken);
+    const priceInSol = isBaseToken ? price : 1 / price;
+    const priceInUsd = priceInSol * getCachedSolPrice();
     // console.log("Meteora Dlmm", Date.now());
 
-    return { priceInSol, dex: "Meteora DLMM" };
+    return { dex: "Meteora DLMM", poolId: poolAccount.toBase58(), liquidity, priceInSol, priceInUsd };
   } catch (error) {
     console.error("Error fetching Meteora DLMM token price:", error);
     throw error

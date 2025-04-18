@@ -4,10 +4,12 @@ import {
   liquidityStateV4Layout,
 } from "@raydium-io/raydium-sdk-v2";
 import { CLEAR_CACHE_INTERVAL, connection } from "../config";
-import BIGN, { BN } from "bn.js";
+import { BN } from "bn.js";
 import { PublicKey } from "@solana/web3.js";
+import { calculatePrice, getCachedSolPrice } from "../service";
 
 type PoolInfo = {
+  poolId: PublicKey,
   baseMint: PublicKey;
   quoteMint: PublicKey;
   baseVault: PublicKey;
@@ -35,22 +37,22 @@ export async function getRayAmmPriceInSol(ca: string) {
       connection.getTokenAccountBalance(poolInfo.baseVault),
       connection.getTokenAccountBalance(poolInfo.quoteVault),
     ]);
-    const price =
-      new BN(quoteData.value.amount)
-        .mul(
-            new BN(10).pow(
-            new BN(baseData.value.decimals).sub(new BN(quoteData.value.decimals)).add(new BN(9))
-            )
-        )
-        .div(new BN(baseData.value.amount))
-        .toNumber() /
-      10 ** 9;
-
     const isBaseToken = ca === poolInfo.baseMint.toBase58();
-    const priceInSol = isBaseToken ? price : 1 / price;
+
+    const priceInSol = isBaseToken
+    ? calculatePrice(quoteData.value.amount, baseData.value.amount, 
+        baseData.value.decimals - quoteData.value.decimals)
+    : calculatePrice(baseData.value.amount, quoteData.value.amount, 
+        quoteData.value.decimals - baseData.value.decimals);
+
+    let wsol_amount = isBaseToken? new BN(quoteData.value.amount): new BN(baseData.value.amount);
+    const liquidity = 2 * wsol_amount.toNumber() / 10 ** 9 * getCachedSolPrice();
+    if(liquidity === 0) throw new Error("No liquidity");
+    // const priceInSol = isBaseToken ? price : 1 / price;
+    const priceInUsd = priceInSol * getCachedSolPrice();
     // console.log("Raydium Amm", Date.now());
 
-    return { priceInSol, dex: "Raydium Amm" };
+    return { dex: "Raydium Amm", poolId: poolInfo.poolId.toBase58(), liquidity, priceInSol, priceInUsd };
   } catch (error) {
     console.error("Error fetching ray amm pool info:", error);
     throw error;
@@ -102,6 +104,7 @@ const getRayAmmPool = async (ca: string) => {
   const poolAccount = accounts[0];
   const poolState = POOL_LAYOUT.decode(poolAccount.account.data);
   const poolInfo: PoolInfo = {
+    poolId: poolAccount.pubkey,
     baseMint: poolState.baseMint,
     quoteMint: poolState.quoteMint,
     baseVault: poolState.baseVault,

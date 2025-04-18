@@ -3,6 +3,7 @@ import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { PUMP_FUN_PROGRAM, PUMP_TOKEN_DECIMALS } from "./constants";
 import { readBigUintLE } from "./utils";
 import { connection } from "../config";
+import { getCachedSolPrice } from "../service";
 
 export async function getPumpTokenPriceInSol(ca: string) {
     try{
@@ -64,16 +65,17 @@ export async function getPumpTokenPriceInSol(ca: string) {
         virtualSolReserves /
         LAMPORTS_PER_SOL /
         (virtualTokenReserves / 10 ** PUMP_TOKEN_DECIMALS);
+        const priceInUsd = priceInSol * getCachedSolPrice();
     
         if(virtualSolReserves === 0 || virtualTokenReserves === 0) {
             throw new Error("curve account not found");
         //   return null;
         }
-        console.log("Pumpfun", Date.now());
+        // console.log("Pumpfun", Date.now());
 
-        return { priceInSol, dex: "PumpFun" };
+        return { dex: "PumpFun", liquidity: undefined, priceInSol, priceInUsd };
     }catch(error){
-        console.error(error);
+        console.error("Error fetching pump token info", error);
         throw error;
         // return null;
     }
