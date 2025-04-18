@@ -9,7 +9,7 @@ initLogger()
 const app = express();
 
 app.use(bodyParser.json());
-app.use('/api', router);
+app.use('/api/v1', router);
 
 mongoose.connect(MONGODB_URI)
 .then(() => {
