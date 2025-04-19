@@ -52,7 +52,7 @@
 ## How to use
 - Open the Terminal window and type this 
     ``` bash
-    curl -X GET "http://localhost:5000/api/price?ca=2aziTNXVUtca823nCUx9AMAci5pB4YWYhkC13pwrpump" \
+    curl -X GET "http://localhost:5000/api/v1/price?ca=2aziTNXVUtca823nCUx9AMAci5pB4YWYhkC13pwrpump" \
   -H "x-api-key: 6565f8c42ba4daf900da3cad5d12d124946d7588" \
   -H "Content-Type: application/json"
     ```
