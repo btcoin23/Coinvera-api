@@ -8,7 +8,7 @@ import {
 import { getCachedSolPrice } from "../service";
   
   // Function to fetch pool info using a mint address
-  export async function getRayClmmPriceInSol(ca: string) {
+  export async function getRayClmmPrice(ca: string) {
     try {
       const POOL_PROGRAM_ID = CLMM_PROGRAM_ID;
       const POOL_LAYOUT = PoolInfoLayout;

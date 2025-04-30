@@ -26,7 +26,7 @@ const POOL_LAYOUT = liquidityStateV4Layout;
 const quoteCA = WSOLMint.toBase58();
 
 // Function to fetch pool info using a mint address
-export async function getRayAmmPriceInSol(ca: string) {
+export async function getRayAmmPrice(ca: string) {
   try {
     let poolInfo = cachePoolInfo.get(ca);
     if (poolInfo === undefined) {

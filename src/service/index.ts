@@ -1,7 +1,15 @@
 import { BN } from "bn.js";
+import { CLEAR_CACHE_INTERVAL, connection } from "../config";
+import { PublicKey } from "@solana/web3.js";
+import { SPL_MINT_LAYOUT } from "@raydium-io/raydium-sdk-v2";
 
 const WSOL = "So11111111111111111111111111111111111111112";
 let cachedSolPrice = 130;
+
+const cacheTokenSupply = new Map<string, number>();
+setInterval(() => {
+  cacheTokenSupply.clear();
+}, CLEAR_CACHE_INTERVAL);
 
 async function fetchLatestSolPrice() {
   const tmpSolPrice = await getSolPrice();
@@ -49,4 +57,19 @@ export function calculatePrice(
 
   // Convert to JavaScript number and adjust for 9 decimals
   return rawPrice.toNumber() / 1e11;
+}
+
+export async function getTokenSupply(mint: string): Promise<number> {
+  let supply = cacheTokenSupply.get(mint);
+  if (supply === undefined) {
+    const accountInfo = await connection.getAccountInfo(new PublicKey(mint));
+    if (accountInfo === null) {
+      throw new Error("Token account not found");
+    }
+    const _supply = SPL_MINT_LAYOUT.decode(accountInfo.data).supply;
+    const _decimals = SPL_MINT_LAYOUT.decode(accountInfo.data).decimals;
+    supply = _supply.toNumber() / 10 **_decimals;
+    cacheTokenSupply.set(mint, supply);
+  }
+  return supply;
 }

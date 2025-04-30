@@ -2,18 +2,21 @@ import { Connection } from "@solana/web3.js";
 import { configDotenv } from "dotenv";
 configDotenv();
 
-export const RateLimit = {
+export const PlanLimit = {
   free: {
     windowMs: 60 * 1000,
     max: 10,
+    batch: 1,
   },
   pro: {
     windowMs: 60 * 1000,
     max: 20,
+    batch: 10,
   },
   advanced: {
     windowMs: 60 * 1000,
     max: 30,
+    batch: 20,
   }
 }
 

@@ -26,7 +26,7 @@ const POOL_LAYOUT = CpmmPoolInfoLayout;
 const quoteCA = WSOLMint.toBase58();
 
 // Function to fetch pool info using a mint address
-export async function getRayCpmmPriceInSol(ca: string) {
+export async function getRayCpmmPrice(ca: string) {
   try {
     // Fetch program accounts for Raydium's AMM program (AmmV4)
 

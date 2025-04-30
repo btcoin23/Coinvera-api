@@ -2,7 +2,7 @@ import { Moonshot, Environment } from "@wen-moon-ser/moonshot-sdk";
 import { RPC_URL } from "../config";
 import { getCachedSolPrice } from "../service";
 
-export async function getMoonshotTokenPriceInSol(ca: string) {
+export async function getMoonshotTokenPrice(ca: string) {
   try{
     const moonshot = new Moonshot({
         rpcUrl: RPC_URL,

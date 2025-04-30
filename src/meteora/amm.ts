@@ -14,7 +14,7 @@ setInterval(() => {
     cachePoolInfo.clear();
 }, CLEAR_CACHE_INTERVAL);
 
-export const getMeteoraAmmTokenPriceInSol = async (ca: string) => {
+export const getMeteoraAmmTokenPrice = async (ca: string) => {
   try {
     const mint = new PublicKey(ca);
 
