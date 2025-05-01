@@ -2,8 +2,8 @@ import * as spl from "@solana/spl-token";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { PUMP_FUN_PROGRAM, PUMP_TOKEN_DECIMALS } from "./constants";
 import { readBigUintLE } from "./utils";
-import { connection } from "../config";
-import { getCachedSolPrice } from "../service";
+import { connection } from "../../config";
+import { getCachedSolPrice } from "../../service";
 
 export async function getPumpTokenPrice(ca: string) {
   try {

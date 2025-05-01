@@ -2,8 +2,8 @@ import { PublicKey } from "@solana/web3.js";
 import * as spl from "@solana/spl-token";
 import DLMM, { IDL, LBCLMM_PROGRAM_IDS } from "@meteora-ag/dlmm";
 import { AnchorProvider, Program } from "@project-serum/anchor";
-import { CLEAR_CACHE_INTERVAL, connection } from "../config";
-import { getCachedSolPrice } from "../service";
+import { CLEAR_CACHE_INTERVAL, connection } from "../../config";
+import { getCachedSolPrice } from "../../service";
 import { BN } from "bn.js";
 
 const cachePoolInfo = new Map<string, PublicKey>();

@@ -4,8 +4,8 @@ import {
     SqrtPriceMath,
     WSOLMint,
   } from "@raydium-io/raydium-sdk-v2";
-  import { connection } from "../config";
-import { getCachedSolPrice } from "../service";
+  import { connection } from "../../config";
+import { getCachedSolPrice } from "../../service";
   
   // Function to fetch pool info using a mint address
   export async function getRayClmmPrice(ca: string) {

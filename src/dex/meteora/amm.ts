@@ -5,9 +5,9 @@ import AmmImpl, {
 import { PublicKey } from "@solana/web3.js";
 import * as spl from "@solana/spl-token";
 import { AnchorProvider, Program } from "@project-serum/anchor";
-import { CLEAR_CACHE_INTERVAL, connection } from "../config";
+import { CLEAR_CACHE_INTERVAL, connection } from "../../config";
 import { BN } from "bn.js";
-import { calculatePrice, getCachedSolPrice } from "../service";
+import { calculatePrice, getCachedSolPrice } from "../../service";
 
 const cachePoolInfo = new Map<string, PublicKey>();
 setInterval(() => {

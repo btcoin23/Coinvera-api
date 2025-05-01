@@ -1,6 +1,6 @@
+import rateLimit, { RateLimitRequestHandler } from "express-rate-limit";
 import { CLEAR_CACHE_INTERVAL, PlanLimit } from "../config";
 import User from "../models/User";
-import rateLimit, { RateLimitRequestHandler } from "express-rate-limit";
 
 const userCache = new Map<string, User>();
 const rateLimiterCache = new Map<string, RateLimitRequestHandler>();

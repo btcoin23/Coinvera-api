@@ -1,16 +1,22 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { MONGODB_URI, PORT } from './config';
-import { router } from './router';
-import { initLogger } from './log/logger';
 import mongoose from 'mongoose';
+import http from 'http';
+import WebSocket from "ws";
+import { router } from './router';
+import { wssHandler } from './wsClient';
+import { initLogger } from './log/logger';
+import { HTTP_PORT, MONGODB_URI, WSS_PORT } from './config';
 
+// logger
 initLogger()
-const app = express();
 
+// API routes
+const app = express();
 app.use(bodyParser.json());
 app.use('/api/v1', router);
 
+// Connect to MONGODB
 mongoose.connect(MONGODB_URI)
 .then(() => {
   console.log('- Connected to MongoDB');
@@ -19,6 +25,15 @@ mongoose.connect(MONGODB_URI)
   console.error('- Error connecting to MongoDB:', error);
 });
 
-app.listen(PORT, () => {
-  console.log(`- Server listening on port ${PORT}`);
+// Create HTTP server
+app.listen(HTTP_PORT, () => {
+  console.log(`- [ HTTP ] Server listening on port ${HTTP_PORT}`);
+});
+
+// Create WEBSOCKET server
+const server = http.createServer();
+const wss = new WebSocket.Server({ server });
+wss.on("connection", wssHandler);
+server.listen(WSS_PORT, () => {
+  console.log("- [ WSS ] Server is running on port:", WSS_PORT);
 });

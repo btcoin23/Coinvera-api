@@ -3,10 +3,10 @@ import {
   WSOLMint,
   liquidityStateV4Layout,
 } from "@raydium-io/raydium-sdk-v2";
-import { CLEAR_CACHE_INTERVAL, connection } from "../config";
+import { CLEAR_CACHE_INTERVAL, connection } from "../../config";
 import { BN } from "bn.js";
 import { PublicKey } from "@solana/web3.js";
-import { calculatePrice, getCachedSolPrice } from "../service";
+import { calculatePrice, getCachedSolPrice } from "../../service";
 
 type PoolInfo = {
   poolId: PublicKey,
