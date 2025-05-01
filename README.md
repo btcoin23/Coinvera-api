@@ -1,4 +1,4 @@
-# SOLANA TOKEN PRICE API BACKEND
+# Coinvera-API
 
 ## Video
 [recording-2025-04-18-14-26-40.webm](https://github.com/user-attachments/assets/3ffefff1-8199-49dc-b120-160dc97a4020)
@@ -6,67 +6,103 @@
 ## Features
 
 - Api price of tokens from pumpfun, raydium(amm, clmm, cpmm), moonshot, meteora(amm, dlmm)
-- Api-key check
-- Api-key usage check
-- Rate-limit check
+- Api-key, usage, rate-limit check
+- Websocket subscription
 
 ## How to run
 - Clone this repo 
     ``` bash
-    git clone https://github.com/btcoin23/Spl-api-backend.git
+    git clone https://github.com/btcoin23/Coinvera-api.git
     ```
-- Run `npm install`
-- Create `.env` file and set `RPC_URL`, `PORT` and `MONGODB_URI`
+- Run `npm install` or `npx yarn`
+- Create `.env` file and set `RPC_URL`, `HTTP_PORT`, `WSS_PORT` and `MONGODB_URI`
     ``` bash
     RPC_URL=https://mainnet.helius-rpc.com/?api-key=...
     MONGODB_URI=mongodb://localhost:27017/SPL-price-api
-    PORT=5000
+    HTTP_PORT=5000
+    WSS_PORT=8080
     ```
 - Check `src/config.ts` for more config
     ``` bash
-    export const RateLimit = {
+    export const PlanLimit = {
         free: {
             windowMs: 60 * 1000,
             max: 10,
+            batch: 1,
+            wssBatch: 1,
         },
         pro: {
             windowMs: 60 * 1000,
             max: 20,
+            batch: 10,
+            wssBatch: 5,
         },
         advanced: {
             windowMs: 60 * 1000,
             max: 30,
+            batch: 20,
+            wssBatch: 10,
         }
     }
 
     export const CLEAR_CACHE_INTERVAL = 1000 * 60 * 60 * 1; // 1 hr
-    export const PORT = process.env.PORT || 3000;
+    export const HTTP_PORT = process.env.HTTP_PORT || 3000;
+    export const WSS_PORT = process.env.WSS_PORT || 8080;
     export const RPC_URL =
     process.env.RPC_URL || "https://api.mainnet-beta.solana.com";
     export const connection = new Connection(RPC_URL);
 
     export const MONGODB_URI = process.env.MONGODB_URI || "http://localhost:27017/SPL-price-api";
     ```
-- Run `npm run dev`
+- Run `npm run build`
+- Run `npm start`
 
-## How to use
-- Open the Terminal window and type this 
+## Test
+- Batch Price API
     ``` bash
-    curl -X GET "http://localhost:5000/api/v1/price?ca=2aziTNXVUtca823nCUx9AMAci5pB4YWYhkC13pwrpump" \
-  -H "x-api-key: 6565f8c42ba4daf900da3cad5d12d124946d7588" \
-  -H "Content-Type: application/json"
+    npx ts-node ./test/wss.test.ts
     ```
-- `ca` is the address of the token
-- `x-api-key` is the api-key
-- `Content-Type` is `application/json`
+- Websocket
+    ``` bash
+    npx ts-node ./test/api.test.ts
+    ```
 
 ## Response example
-- The response of token `2aziTNXVUtca823nCUx9AMAci5pB4YWYhkC13pwrpump` price
+- Batch Price API
     ``` bash
-    {
-        "dex": "PumpFun",
-        "priceInSol": 2.7958993493010253e-8,
-        "priceInUsd": 0.0000037468891867774903
+    [
+        {
+            ca: '3kBEZJLh8oCFApS3vqkgun3V9ronYh1J8EKzrksT6VEb',
+            dex: 'Raydium Amm',
+            poolId: 'E7ztWUaAMYFHdbeFrsCFfdhcQJ8zatc27yGWwg9T6bxZ',
+            liquidity: 23203.279196515403,
+            priceInSol: 0.00000218557,
+            priceInUsd: 0.00032465411327697494,
+            marketCap: 324507.88011731557,
+            success: true
+        }
+    ]
+    ```
+- Websocket
+    ``` bash
+    Received: {
+        type: 'subscribePrice',
+        status: 'success',
+        tokens: [ 'BKdY9X6u9hucgaXbuZ8vVgLvRhPVjT27jrxix7J4pump', '3kBEZJLh8oCFApS3vqkgun3V9ronYh1J8EKzrksT6VEb' ]
+    }
+    Received: {
+        ca: '3kBEZJLh8oCFApS3vqkgun3V9ronYh1J8EKzrksT6VEb',
+        poolId: 'E7ztWUaAMYFHdbeFrsCFfdhcQJ8zatc27yGWwg9T6bxZ',
+        liquidity: 23200.745874058674,
+        priceInSol: 0.00000218557,
+        priceInUsd: 0.000324618667702715,
+        marketCap: 324472.4505087191
+    },
+
+    Received: {
+        type: 'unsubscribePrice',
+        status: 'success',
+        tokens: [ '3kBEZJLh8oCFApS3vqkgun3V9ronYh1J8EKzrksT6VEb' ]
     }
     ```
 

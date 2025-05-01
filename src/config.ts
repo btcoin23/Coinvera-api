@@ -6,8 +6,8 @@ export const PlanLimit = {
   free: {
     windowMs: 60 * 1000,
     max: 10,
-    batch: 2,
-    wssBatch: 2,
+    batch: 1,
+    wssBatch: 1,
   },
   pro: {
     windowMs: 60 * 1000,
