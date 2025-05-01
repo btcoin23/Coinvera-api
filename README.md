@@ -2,6 +2,7 @@
 
 ## Video
 [recording-2025-04-18-14-26-40.webm](https://github.com/user-attachments/assets/3ffefff1-8199-49dc-b120-160dc97a4020)
+[recording-2025-05-01-02-49-26.webm](https://github.com/user-attachments/assets/b62fcbfa-da02-4256-8b26-2a5910617dc8)
 
 ## Features
 
