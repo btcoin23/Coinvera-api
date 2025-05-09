@@ -28,6 +28,8 @@ export const HTTP_PORT = process.env.HTTP_PORT || 3000;
 export const WSS_PORT = process.env.WSS_PORT || 8080;
 export const RPC_URL =
   process.env.RPC_URL || "https://api.mainnet-beta.solana.com";
+export const GRPC_URL =
+  process.env.GRPC_URL || "";
 export const connection = new Connection(RPC_URL);
 
 export const MONGODB_URI = process.env.MONGODB_URI || "http://localhost:27017/SPL-price-api";
