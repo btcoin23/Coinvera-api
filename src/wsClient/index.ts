@@ -6,6 +6,7 @@ type Tsubscription = {
   subscribeId: number;
   tokens: string[];
   stream: any;
+  intervalId?: NodeJS.Timeout;
 };
 
 const wssClientsList = new Map<
@@ -30,11 +31,13 @@ const subscribeTrade = async (data: any, clientId: number, ws: WebSocket) => {
       throw new Error("Exceeded token limit for this plan");
 
     const subscribeId = Date.now();
+    const subscribeInfo = await subscribeTrading(data.tokens, ws);
     wssClientsList.get(clientId)!.tSubscriptions.push(
       {
         subscribeId,
         tokens: data.tokens,
-        stream: subscribeTrading(data.tokens, ws),
+        stream: subscribeInfo?.stream,
+        intervalId: subscribeInfo?.intervalId,
       }
     );
     ws.send(
@@ -45,6 +48,8 @@ const subscribeTrade = async (data: any, clientId: number, ws: WebSocket) => {
         subscribeId,
       })
     );
+    user.plan.credits -= data.tokens.length;
+    await user.save();
   } else throw new Error("Invalid tokens format");
 }
 
@@ -52,20 +57,20 @@ const unsubscribeTrade = async (data: any, clientId: number, ws: WebSocket) => {
   const apiKey = data.apiKey;
   if(!apiKey) 
     throw new Error("API key is required");
-  const unSubscribeId = data.unSubscribeId;
+  const unSubscribeId = data.unsubscribeId;
   if(!unSubscribeId) 
     throw new Error("UnsubscribeId is required");
   const user = await User.findOne({ "plan.apiKey": apiKey });
   if (!user) 
     throw new Error("Invalid API key");
   // if (Array.isArray(data.tokens)) {
-    if (data.tokens.length <= 0) 
-      throw new Error("No tokens provided");
+    // if (data.tokens.length <= 0) 
+    //   throw new Error("No tokens provided");
     wssClientsList.get(clientId)!.tSubscriptions = wssClientsList
       .get(clientId)!
-      .tSubscriptions.filter((_tsubscription) => {
+      .tSubscriptions.filter(async(_tsubscription) => {
         if (_tsubscription.subscribeId === unSubscribeId)
-          unsubscribeTrading(_tsubscription.stream);
+          await unsubscribeTrading(_tsubscription.stream, _tsubscription.intervalId!);
         else return _tsubscription;
       });
     ws.send(

@@ -37,3 +37,9 @@ wss.on("connection", wssHandler);
 server.listen(WSS_PORT, () => {
   console.log("- [ WSS ] Server is running on port:", WSS_PORT);
 });
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+  // Handle the error or exit the process
+  // process.exit(1); // Uncomment to exit the process
+});
