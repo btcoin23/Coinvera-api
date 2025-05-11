@@ -47,7 +47,7 @@ export async function subscribeTrading(keys: string[], ws: WebSocket) {
         // Create `error` / `end` handler
         const streamClosed = new Promise<void>((resolve, reject) => {
             stream.on("error", (error) => {
-                //           reject(error);
+                reject(error);
                 stream.end();
             });
             stream.on("end", () => {

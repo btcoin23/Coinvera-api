@@ -7,7 +7,7 @@ const testSubscribe = () => {
     const payload = {
       apiKey: "b2b690098747cdfb707825b8cb729624791dad1f", // Replace with your actual API key
       method: "subscribeTrade", //subscribeTrade
-      tokens: ["BANGUB59R8SgUjP9ZeAHdWVfPuDi1KxfgjaDMqHzpump"], //account or token to be watched
+      tokens: ["3aAbAGx2Hebip2bcqyAS5RnKwmUiaUsTiMExteQwpump"], //account or token to be watched
     };
     ws.send(JSON.stringify(payload));
   });
@@ -16,12 +16,12 @@ const testSubscribe = () => {
     const message = JSON.parse(data);
     console.log("Received:", message);
     
-    // Check if the message contains an subscribeId
+    // Check if the message contains an subscribeId after 20s
     const unsubscribeId = message.subscribeId;
     if(unsubscribeId){
       setTimeout(() => {
         testUnsubscribe(unsubscribeId)
-      }, 200 * 1000);
+      }, 20 * 1000);
     }
   });
 }
