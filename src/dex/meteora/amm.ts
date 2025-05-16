@@ -29,12 +29,12 @@ export const getMeteoraAmmTokenPrice = async (ca: string) => {
     const stabelPool = await AmmImpl.create(connection, poolAccount);
     if (!stabelPool) throw new Error("Invalid pool");
     const isBaseToken = stabelPool.vaultA.tokenMint.address.equals(mint);
-    const tokenA_amount = stabelPool.poolInfo.tokenAAmount.toNumber();
-    const tokenB_amount = stabelPool.poolInfo.tokenBAmount.toNumber();
-    
+    const tokenA_amount = stabelPool.poolInfo.tokenAAmount.div(new BN(10).pow(new BN(stabelPool.vaultA.tokenMint.decimals))).toNumber();
+    const tokenB_amount = stabelPool.poolInfo.tokenBAmount.div(new BN(10).pow(new BN(stabelPool.vaultB.tokenMint.decimals))).toNumber();
+
     // const token_amount = isBaseToken? tokenA_amount : tokenB_amount;
     const wsol_amount = isBaseToken? tokenB_amount : tokenA_amount;
-    const liquidity = 2 * wsol_amount / 10 ** 9 * getCachedSolPrice();
+    const liquidity = 2 * wsol_amount * getCachedSolPrice();
     if(liquidity === 0) throw new Error("No liquidity");
     const priceInSol = isBaseToken
         ? calculatePrice(stabelPool.poolInfo.tokenBAmount.toString(), stabelPool.poolInfo.tokenAAmount.toString(), 

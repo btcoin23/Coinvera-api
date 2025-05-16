@@ -1,0 +1,1 @@
+export type DEX_TYPE = "pumpfun" | "raydium" | "moonshot" | "meteora";

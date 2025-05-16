@@ -68,7 +68,7 @@ export async function getTokenSupply(mint: string): Promise<number> {
     }
     const _supply = SPL_MINT_LAYOUT.decode(accountInfo.data).supply;
     const _decimals = SPL_MINT_LAYOUT.decode(accountInfo.data).decimals;
-    supply = _supply.toNumber() / 10 **_decimals;
+    supply = _supply.div(new BN(10).pow(new BN(_decimals))).toNumber();
     cacheTokenSupply.set(mint, supply);
   }
   return supply;
