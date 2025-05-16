@@ -64,7 +64,7 @@ async function handleTokenRequest(req: any, res: any, dex?: DEX_TYPE) {
 }
 
 // Original endpoint that queries all DEXs
-router.get("/", async (req, res) => {
+router.get("/price", async (req, res) => {
   await handleTokenRequest(req, res);
 });
 
