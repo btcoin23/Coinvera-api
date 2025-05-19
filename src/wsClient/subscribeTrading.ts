@@ -34,7 +34,7 @@ const unsubscribeRequest: SubscribeRequest = {
     "accountsDataSlice": [],
 };
 
-export async function subscribeTrading(keys: string[], ws: WebSocket) {
+export async function setTradeSubscription(keys: string[], ws: WebSocket) {
     // Open connection.
     try {
         const client = new Client(GRPC_URL, X_TOKEN, {

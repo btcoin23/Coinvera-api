@@ -1,6 +1,7 @@
 import { PlanLimit } from "../config";
 import User from "../models/User";
-import { subscribeTrading, unsubscribeTrading } from "./subscribeTrading";
+import { getTokenInfo } from "../router";
+import { setTradeSubscription, unsubscribeTrading } from "./subscribeTrading";
 
 type Tsubscription = {
   subscribeId: number;
@@ -17,79 +18,117 @@ const wssClientsList = new Map<
   }
 >();
 
-const subscribeTrade = async (data: any, clientId: number, ws: WebSocket) => {
+const isValidSubscribeRequest = async (data: any) => {
   const apiKey = data.apiKey;
-  if(!apiKey) 
+  if (!apiKey)
     throw new Error("API key is required");
   const user = await User.findOne({ "plan.apiKey": apiKey });
-  if (!user) 
+  if (!user)
     throw new Error("Invalid API key");
-  if (Array.isArray(data.tokens)) {
-    if (data.tokens.length <= 0) 
-      throw new Error("No tokens provided");
-    if (data.tokens.length > PlanLimit[(user as User).plan.level].wssBatch)
-      throw new Error("Exceeded token limit for this plan");
+  if (!Array.isArray(data.tokens))
+    throw new Error("Invalid tokens format");
+  if (data.tokens.length <= 0)
+    throw new Error("No tokens provided");
+  if (data.tokens.length > PlanLimit[(user as User).plan.level].wssBatch)
+    throw new Error("Exceeded token limit for this plan");
+  user.plan.credits -= data.tokens.length;
+  await user.save();
+}
 
-    const subscribeId = Date.now();
-    const subscribeInfo = await subscribeTrading(data.tokens, ws);
-    wssClientsList.get(clientId)!.tSubscriptions.push(
-      {
-        subscribeId,
-        tokens: data.tokens,
-        stream: subscribeInfo?.stream,
-        intervalId: subscribeInfo?.intervalId,
-      }
-    );
-    ws.send(
-      JSON.stringify({
-        type: "subscribeTrade",
-        status: "success",
-        tokens: data.tokens,
-        subscribeId,
-      })
-    );
-    user.plan.credits -= data.tokens.length;
-    await user.save();
-  } else throw new Error("Invalid tokens format");
+const subscribeTrade = async (data: any, clientId: number, ws: WebSocket) => {
+  await isValidSubscribeRequest(data);
+  const subscribeId = Date.now();
+  const subscribeInfo = await setTradeSubscription(data.tokens, ws);
+  wssClientsList.get(clientId)!.tSubscriptions.push(
+    {
+      subscribeId,
+      tokens: data.tokens,
+      stream: subscribeInfo?.stream,
+      intervalId: subscribeInfo?.intervalId,
+    }
+  );
+  ws.send(
+    JSON.stringify({
+      type: "subscribeTrade",
+      status: "success",
+      tokens: data.tokens,
+      subscribeId,
+    })
+  );
+}
+
+const subscribePrice = async (data: any, clientId: number, ws: WebSocket) => {
+  await isValidSubscribeRequest(data);
+  const subscribeId = Date.now();
+  wssClientsList.get(clientId)!.tSubscriptions.push(
+    {
+      subscribeId,
+      tokens: data.tokens,
+      stream: null,
+      intervalId: setPriceSubscription(data.tokens, ws),
+    }
+  );
+  ws.send(
+    JSON.stringify({
+      type: "subscribePrice",
+      status: "success",
+      tokens: data.tokens,
+      subscribeId,
+    })
+  );
+}
+
+const isValidUnsubscribeRequest = async (data: any) => {
+  const apiKey = data.apiKey;
+  if (!apiKey)
+    throw new Error("API key is required");
+  const user = await User.findOne({ "plan.apiKey": apiKey });
+  if (!user)
+    throw new Error("Invalid API key");
 }
 
 const unsubscribeTrade = async (data: any, clientId: number, ws: WebSocket) => {
-  const apiKey = data.apiKey;
-  if(!apiKey) 
-    throw new Error("API key is required");
+  await isValidUnsubscribeRequest(data);
   const unSubscribeId = data.unsubscribeId;
-  if(!unSubscribeId) 
+  if (!unSubscribeId)
     throw new Error("UnsubscribeId is required");
-  const user = await User.findOne({ "plan.apiKey": apiKey });
-  if (!user) 
-    throw new Error("Invalid API key");
-  // if (Array.isArray(data.tokens)) {
-    // if (data.tokens.length <= 0) 
-    //   throw new Error("No tokens provided");
-    wssClientsList.get(clientId)!.tSubscriptions = wssClientsList
-      .get(clientId)!
-      .tSubscriptions.filter(async(_tsubscription) => {
-        if (_tsubscription.subscribeId === unSubscribeId)
-          await unsubscribeTrading(_tsubscription.stream, _tsubscription.intervalId!);
-        else return _tsubscription;
-      });
-    ws.send(
-      JSON.stringify({
-        type: "unsubscribeTrade",
-        status: "success",
-        tokens: data.tokens,
-        unSubscribeId,
-      })
-    );
-  // } else {
-  //   wssClientsList.get(clientId)!.tSubscriptions = [];
-  //   ws.send(
-  //     JSON.stringify({
-  //       type: "unsubscribeTrade",
-  //       status: "success",
-  //     })
-  //   );
-  // }
+  wssClientsList.get(clientId)!.tSubscriptions = wssClientsList
+    .get(clientId)!
+    .tSubscriptions.filter(async (_tsubscription) => {
+      if (_tsubscription.subscribeId === unSubscribeId)
+        await unsubscribeTrading(_tsubscription.stream, _tsubscription.intervalId!);
+      else return _tsubscription;
+    });
+  ws.send(
+    JSON.stringify({
+      type: "unsubscribeTrade",
+      status: "success",
+      tokens: data.tokens,
+      unSubscribeId,
+    })
+  );
+}
+
+const unsubscribePrice = async (data: any, clientId: number, ws: WebSocket) => {
+  await isValidUnsubscribeRequest(data);
+  const unSubscribeId = data.unsubscribeId;
+  if (!unSubscribeId)
+    throw new Error("UnsubscribeId is required");
+  wssClientsList.get(clientId)!.tSubscriptions = wssClientsList
+    .get(clientId)!
+    .tSubscriptions.filter(async (_tsubscription) => {
+      if (_tsubscription.subscribeId === unSubscribeId)
+        clearInterval(_tsubscription.intervalId!);
+      else return _tsubscription;
+    });
+  ws.send(
+    JSON.stringify({
+      type: "unsubscribePrice",
+      status: "success",
+      tokens: data.tokens,
+      unSubscribeId,
+    })
+  );
 }
 
 export const wssHandler = (ws: WebSocket) => {
@@ -108,9 +147,15 @@ export const wssHandler = (ws: WebSocket) => {
         case "subscribeTrade":
           await subscribeTrade(data, clientId, ws);
           break;
+        case "subscribePrice":
+          await subscribePrice(data, clientId, ws);
+          break;
 
         case "unsubscribeTrade":
           await unsubscribeTrade(data, clientId, ws);
+          break;
+        case "unsubscribePrice":
+          await unsubscribePrice(data, clientId, ws);
           break;
         default:
           throw new Error("Unknown method");
@@ -146,19 +191,19 @@ export const wssHandler = (ws: WebSocket) => {
   };
 };
 
-// const subscribeTrading = (ca: string, clientWss: WebSocket) => {
-//   return setInterval(async() => {
-//     try{
-//       const result = await getTokenInfo(ca);
-//       clientWss.send(JSON.stringify(result));
-//     }catch(error){
-//       clientWss.send(JSON.stringify({
-//         type: "error",
-//         message:
-//           error instanceof Error
-//             ? error.message
-//             : "Error while processing request",
-//       }));
-//     }
-//   }, 2 * 1000);
-// };
+const setPriceSubscription = (tokens: string[], clientWss: WebSocket) => {
+  return setInterval(async () => {
+    try {
+      const result = await Promise.all(tokens.map(ca => getTokenInfo(ca)));
+      clientWss.send(JSON.stringify(result));
+    } catch (error) {
+      clientWss.send(JSON.stringify({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error while processing request",
+      }));
+    }
+  }, 2 * 1000);
+};
