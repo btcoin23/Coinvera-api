@@ -38,7 +38,7 @@ export async function setTradeSubscription(keys: string[], ws: WebSocket) {
     // Open connection.
     try {
         const client = new Client(GRPC_URL, X_TOKEN, {
-            "grpc.max_receive_message_length": 1024 * 1024 * 1024, // 64MiB
+            // "grpc.max_receive_message_length": 1024 * 1024 * 1024, // 64MiB/
         });
 
         // Subscribe for events
@@ -47,13 +47,16 @@ export async function setTradeSubscription(keys: string[], ws: WebSocket) {
         // Create `error` / `end` handler
         const streamClosed = new Promise<void>((resolve, reject) => {
             stream.on("error", (error) => {
+                console.error("________________Stream error", error);
                 reject(error);
                 stream.end();
             });
             stream.on("end", () => {
+                console.error("________________Stream end");
                 resolve();
             });
             stream.on("close", () => {
+                console.error("________________Stream close");
                 resolve();
             });
         });
@@ -63,7 +66,6 @@ export async function setTradeSubscription(keys: string[], ws: WebSocket) {
             try {
                 // console.log("Received data", data);
                 if (data && data.transaction) {
-                    // console.log("Transaction data received", data);
                     const convertedTx = convertBuffers(data.transaction);
                     if (!convertedTx.transaction) return;
                     if (!convertedTx.transaction.transaction.message) return;
@@ -117,7 +119,7 @@ export async function setTradeSubscription(keys: string[], ws: WebSocket) {
 
         // Example subscribe request.
         const request: SubscribeRequest = {
-            commitment: CommitmentLevel.PROCESSED,
+            commitment: CommitmentLevel.CONFIRMED,
             accountsDataSlice: [],
             ping: undefined,
             transactions: {
@@ -144,6 +146,7 @@ export async function setTradeSubscription(keys: string[], ws: WebSocket) {
                 if (err === null || err === undefined) {
                     resolve();
                 } else {
+                    console.log("________________________Error in subscribe request", err);
                     reject(err);
                 }
             });
@@ -153,55 +156,55 @@ export async function setTradeSubscription(keys: string[], ws: WebSocket) {
         });
 
         // Send pings every 5s to keep the connection open
-        const pingRequest: SubscribeRequest = {
-            // Required, but unused arguments
-            accounts: {},
-            accountsDataSlice: [],
-            transactions: {},
-            blocks: {},
-            blocksMeta: {},
-            slots: {},
-            transactionsStatus: {},
-            entry: {},
-        };
-        const intervalId = setInterval(async () => {
-            await new Promise<void>((resolve, reject) => {
-                stream.write(pingRequest, (err: null | undefined) => {
-                    if (err === null || err === undefined) {
-                        resolve();
-                    } else {
-                        reject(err);
-                    }
-                });
-            }).catch((reason) => {
-                console.error(reason);
-                ws.send(JSON.stringify({
-                    type: "error",
-                    status: "subscription failed",
-                    message:
-                        reason instanceof Error
-                            ? reason.message
-                            : "Error while processing request",
-                }));
-                ws.close();
-                clearInterval(intervalId);
-                stream.write(unsubscribeRequest);
-                stream.destroy();
-                throw reason;
-            });
-        }, PING_INTERVAL_MS);
+        // const pingRequest: SubscribeRequest = {
+        //     // Required, but unused arguments
+        //     accounts: {},
+        //     accountsDataSlice: [],
+        //     transactions: {},
+        //     blocks: {},
+        //     blocksMeta: {},
+        //     slots: {},
+        //     transactionsStatus: {},
+        //     entry: {},
+        // };
+        // const intervalId = setInterval(async () => {
+        //     await new Promise<void>((resolve, reject) => {
+        //         stream.write(pingRequest, (err: null | undefined) => {
+        //             if (err === null || err === undefined) {
+        //                 resolve();
+        //             } else {
+        //                 reject(err);
+        //             }
+        //         });
+        //     }).catch((reason) => {
+        //         console.error(reason);
+        //         ws.send(JSON.stringify({
+        //             type: "error",
+        //             status: "subscription failed",
+        //             message:
+        //                 reason instanceof Error
+        //                     ? reason.message
+        //                     : "Error while processing request",
+        //         }));
+        //         ws.close();
+        //         clearInterval(intervalId);
+        //         stream.write(unsubscribeRequest);
+        //         stream.destroy();
+        //         throw reason;
+        //     });
+        // }, 60* 60 *1000);
 
         streamClosed;
-        return { stream, intervalId };
+        return { stream };
     } catch (e) {
         console.error("Error in subscribeTrading function", e);
         throw e;
     }
 }
 
-export async function unsubscribeTrading(stream: any, intervalId: NodeJS.Timeout) {
+export async function unsubscribeTrading(stream: any) {
     try {
-        clearInterval(intervalId);
+        // clearInterval(intervalId);
         await stream.write(unsubscribeRequest);
         await stream.destroy();
     } catch (e) {

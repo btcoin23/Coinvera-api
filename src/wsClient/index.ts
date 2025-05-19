@@ -44,7 +44,7 @@ const subscribeTrade = async (data: any, clientId: number, ws: WebSocket) => {
       subscribeId,
       tokens: data.tokens,
       stream: subscribeInfo?.stream,
-      intervalId: subscribeInfo?.intervalId,
+      intervalId: undefined,
     }
   );
   ws.send(
@@ -96,7 +96,7 @@ const unsubscribeTrade = async (data: any, clientId: number, ws: WebSocket) => {
     .get(clientId)!
     .tSubscriptions.filter(async (_tsubscription) => {
       if (_tsubscription.subscribeId === unSubscribeId)
-        await unsubscribeTrading(_tsubscription.stream, _tsubscription.intervalId!);
+        await unsubscribeTrading(_tsubscription.stream);
       else return _tsubscription;
     });
   ws.send(
